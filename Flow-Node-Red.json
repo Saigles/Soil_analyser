@@ -1,0 +1,23 @@
+[
+    {
+        "id": "1cd1e2f003aaae6d",
+        "type": "function",
+        "z": "448de47d9c5c0583",
+        "name": "Format upnlink Data",
+        "func": "// vérifie la présence du payload et de la propriété frmPayload\nif (!msg.payload || !msg.payload.frmPayload) {\n    node.error(\"Pas de payload à décoder\");\n    return null;\n}\n\n// conversion du Base64 en Buffer\nlet bytes = Buffer.from(msg.payload.frmPayload, 'base64');\nif (bytes.length < 10) {\n    node.error(\"Payload trop court (\" + bytes.length + \" octets)\");\n    return null;\n}\n\n// décodage des données\nlet decoded = {\n    bme280: {\n        // utilisation de readInt16BE pour permettre des températures négatives\n        temperature: parseFloat((bytes.readInt16BE(0) / 100.0).toFixed(2)),\n        humidity: bytes.readUInt8(2),\n        pressure: parseFloat((bytes.readUInt16BE(3) / 1.0).toFixed(2))\n    },\n    bme680: {\n        gas: parseFloat((bytes.readUInt16BE(5) / 1.0).toFixed(2))\n    },\n    kx023: {\n        accel_x: parseFloat((bytes.readInt8(7) / 50.0).toFixed(2)),\n        accel_y: parseFloat((bytes.readInt8(8) / 50.0).toFixed(2)),\n        accel_z: parseFloat((bytes.readInt8(9) / 50.0).toFixed(2))\n    }\n};\n\n// ajout éventuel de métadonnées (si disponibles dans msg.payload)\ndecoded.metadata = {\n    // par exemple, si le gateway transmet d'autres infos\n    time: msg.payload.time || Date.now()\n};\n\nmsg.decoded = decoded;\nreturn msg;\n",
+        "outputs": 1,
+        "timeout": "",
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 520,
+        "y": 160,
+        "wires": [
+            [
+                "7d8d2e2b17648b09",
+                "2379b3fe8bac1897"
+            ]
+        ]
+    }
+]
